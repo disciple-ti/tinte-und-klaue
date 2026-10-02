@@ -8,6 +8,8 @@ Alle Zeichnungen, Illustrationen und daraus abgeleiteten Grafiken in diesem Repo
 - alle Dateien im Ordner `docs/screenshots/`
 - die als Base64 in `index.html` und anderen Dateien eingebetteten Bilder
 
+**Ausnahme Hintergrundbilder:** Die Arena- und Menühintergründe (`img/hintergrund_*.webp`) sind von dieser Erklärung ausgenommen, soweit sie aus fremden Quellen stammen. Für sie gelten dann die Lizenzbedingungen der jeweiligen Quelle.
+
 Du darfst das Spiel spielen, auf dieses Repository verlinken und es im Rahmen der GitHub-Nutzungsbedingungen ansehen und forken. Jede andere Nutzung der Bilder – insbesondere Vervielfältigung, Bearbeitung, Veröffentlichung, kommerzielle Nutzung oder die Verwendung zum Training von KI-Modellen – ist ohne meine vorherige schriftliche Zustimmung nicht erlaubt.
 
 Wer den Code (MIT-Lizenz) für ein eigenes Projekt verwenden möchte, ersetzt bitte die Bilder durch eigene.

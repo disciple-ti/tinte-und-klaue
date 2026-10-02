@@ -14,33 +14,47 @@ Ich male gern Tiere, meist als Schablonen-Kunst oder Tuschezeichnung: schwarz-we
 
 | | Kämpfer | Tempo / Kraft / Vert. | Spezialattacke | Super-Attacke |
 |---|---|:---:|---|---|
-| 🎸 | **Basso** – Luchs mit E-Bass | 4 / 2 / 3 | Bass-Druckwelle am Boden | **DROP** – die Bühne bebt, nur Springen hilft |
+| 🎸 | **Basso** – Luchs mit E-Bass | 4 / 2 / 3 | Bass-Druckwelle am Boden | **DROP** – der Boden bebt, nur Springen hilft |
+| 🎧 | **Cool Cat** – Katze mit Kopfhörern | 5 / 2 / 2 | Blendung – die Sonnenbrille blitzt | **CHILL-MODUS** – Bass-Welle, 3 Sek. Zeitlupe |
 | 🎸 | **Riff** – Tiger mit E-Gitarre | 3 / 4 / 2 | Gitarrenschwung (3 Treffer) | **POWER-CHORD** – riesige Klangwelle |
-| 🗡️ | **Laserbear** – Bär mit Laserschwert | 2 / 4 / 3 | Schwertwurf als Bumerang | **LASER-WIRBELSTURM** |
 | 🌺 | **Rex Aloha** – T-Rex im Hawaiihemd | 2 / 5 / 2 | Schwanzfeger (wirft um) | **HIBISKUS-STURM** – Blütenregen |
-| 🦁 | **Leo Umbra** – Löwe mit Kapuze | 3 / 4 / 2 | Tintenklauen-Sprung | **KÖNIGSBRÜLLER** – Schockwelle |
-| 🐯 | **Tigris** – Tiger mit Kapuze | 4 / 4 / 1 | Krallen-Sprint durch den Gegner | **SCHATTENWIRBEL** – 6 Schattenhiebe |
+| 🗡️ | **Laserbear** – Bär mit Laserschwert | 2 / 4 / 3 | Schwertwurf als Bumerang | **LASER-WIRBELSTURM** |
+| 🔥 | **Glut** – Fuchs mit Glutschwertern | 4 / 3 / 2 | Glutsprung durch den Gegner | **FEUERWIRBEL** – 6 Glutschwert-Hiebe |
 
 Alle Kämpfer sind ausbalanciert: Die Summe aus Tempo, Kraft und Verteidigung ist immer 9.
 
+### Drei Haltungen pro Kämpfer
+
+![Die drei Haltungen aller Kämpfer](docs/screenshots/haltungen.jpg)
+
+Jeder Kämpfer hat drei Körperhaltungen, zwischen denen im Kampf mit einer kurzen Überblendung gewechselt wird:
+
+| Haltung | wird gezeigt bei |
+|---|---|
+| 1 – Grundstellung | Stehen, Laufen, Ducken, Blocken, Treffer einstecken, am Boden liegen |
+| 2 – Angriff | allen Angriffen am Boden, Spezial- und Super-Attacken |
+| 3 – Sprung/Kick | Springen, Sprungangriffen und als Siegerpose |
+
+Die Zuordnung steht im Code in `HALTUNG_FUER` und lässt sich dort ändern. Einzelne Angriffe können mit dem Feld `haltung: 1|2|3` eine eigene Haltung bekommen.
+
 <p>
   <img src="docs/screenshots/charakterauswahl.jpg" width="49%" alt="Charakterauswahl">
-  <img src="docs/screenshots/super-attacke.jpg" width="49%" alt="Super-Attacke Königsbrüller">
-  <img src="docs/screenshots/laserwirbel.jpg" width="49%" alt="Laser-Wirbelsturm im Mondtal">
-  <img src="docs/screenshots/kampf-buehne.jpg" width="49%" alt="Kampf auf der Konzertbühne">
-  <img src="docs/screenshots/kampf-tempel.jpg" width="49%" alt="Kampf im Tinten-Tempel">
-  <img src="docs/screenshots/kampf-strand.jpg" width="49%" alt="Kampf am Strand bei Nacht">
+  <img src="docs/screenshots/super-attacke.jpg" width="49%" alt="Super-Attacke DROP">
+  <img src="docs/screenshots/kampf-neon.jpg" width="49%" alt="Kampf am Neon-Horizont">
+  <img src="docs/screenshots/kampf-spielhalle.jpg" width="49%" alt="Kampf in der Spielhalle">
+  <img src="docs/screenshots/kampf-retro.jpg" width="49%" alt="Kampf auf dem Retro-Schreibtisch">
+  <img src="docs/screenshots/kampf-gamingzimmer.jpg" width="49%" alt="Kampf im Gaming-Zimmer">
 </p>
 
 ## Features
 
-- **Arcade** – nacheinander gegen alle anderen Kämpfer, Endgegner ist der Kapuzen-Orden
+- **Arcade** – nacheinander gegen alle anderen Kämpfer, Endgegner ist Glut
 - **Duell gegen CPU** – Kämpfer, Gegner und Arena frei wählbar
 - **2 Spieler an einer Tastatur** – mit Siegstatistik für die Sitzung
 - **KI gegen KI** – zum Zuschauen
 - **KI** als Zustandsautomat mit drei Schwierigkeitsstufen (reagiert auf Angriffe, blockt, springt über Projektile)
 - **Kampfsystem** mit Block (hoch/tief), 3er-Combo mit Finisher, Energieleiste, Super-Attacken mit Einblendung, Hitstop und Bildschirmwackeln
-- **4 Arenen**: Mondtal (aus meinem Bild einer Nachtlandschaft), Konzertbühne, Tinten-Tempel, Strand bei Nacht
+- **4 Arenen**: Neon-Horizont, Spielhalle, Retro-Schreibtisch, Gaming-Zimmer – mit Parallaxe und Neon-Boden
 - **Sound & Musik** komplett per Web Audio API erzeugt – keine Audiodateien
 - **Touch-Steuerung** im Einzelspieler auf Tablets und Handys
 - Tastenbelegung, Einstellungen und Statistik werden im Browser gespeichert
@@ -64,7 +78,7 @@ Tipps: Dreimal leichter Angriff hintereinander löst einen Finisher aus. Tiefe A
 
 ## Technik
 
-- **Eine einzige HTML-Datei** (`index.html`, ca. 940 KB) – HTML, CSS und JavaScript inline, alle Bilder als Base64 eingebettet
+- **Eine einzige HTML-Datei** (`index.html`, ca. 1,2 MB) – HTML, CSS und JavaScript inline, alle Bilder als Base64 eingebettet
 - **Keine Frameworks, keine Bibliotheken**, kein Build-Schritt nötig zum Spielen
 - Canvas mit fester Auflösung 1280×720, responsiv skaliert
 - Spielschleife mit fester Physik-Schrittweite (60 Updates/s), unabhängig von der Bildwiederholrate
@@ -76,8 +90,8 @@ Tipps: Dreimal leichter Angriff hintereinander löst einen Finisher aus. Tiefe A
 ```
 index.html                         fertiges Spiel (wird von tools/build.py erzeugt)
 src/tinte-und-klaue.template.html  Quellcode des Spiels (ohne eingebettete Bilder)
-img/                               freigestellte Sprites, Einblendungen, Arena-Bild
-tools/prep.py                      Bildaufbereitung: Freistellen, Zuschneiden, Skalieren
+img/                               <id>_haltung1..3.webp (Kämpfer) und hintergrund_*.webp (Arenen, Menü)
+tools/prep.py                      Bildaufbereitung: Blätter zerlegen, freistellen, ausrichten, verkleinern
 tools/build.py                     bettet img/ in die Vorlage ein und schreibt index.html
 tools/test.js                      automatischer Browsertest mit Playwright
 tools/test-2spieler.js             Test für gleichzeitige Eingaben im 2-Spieler-Modus
@@ -90,7 +104,7 @@ docs/screenshots/                  Bilder für diese Seite
 python3 tools/build.py            # index.html neu erzeugen
 ```
 
-Neue Kämpfer: Originalbild nach `originale/` legen, in `tools/prep.py` einen Eintrag ergänzen (Hintergrund schwarz/weiß, Zuschnitt), `python3 tools/prep.py` ausführen, dann in der Vorlage einen Eintrag in `CHARAKTERE` und die Attacken in `erstelleAttacken()` anlegen.
+Neue Kämpfer: ein Bild mit den 3 Haltungen nebeneinander nach `originale/` legen, in `tools/prep.py` unter `BLAETTER` eintragen (Hintergrund weiß, schwarz oder Schachbrett), `python3 tools/prep.py` ausführen. Das Skript schneidet die Haltungen aus, stellt sie frei und legt alle drei auf eine gleich große Leinwand mit gemeinsamer Fußlinie. Danach in der Vorlage die ID in `CHARAKTER_IDS`, einen Eintrag in `CHARAKTERE` und die Attacken in `erstelleAttacken()` ergänzen.
 
 Tests (Node.js + Playwright):
 

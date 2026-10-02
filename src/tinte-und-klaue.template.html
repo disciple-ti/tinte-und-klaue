@@ -39,12 +39,12 @@ const BILDER_AUS_ORDNER = false;
 const BILD_ORDNER = 'img/';
 const EINGEBETTETE_BILDER = /*__BILDER__*/{};
 
-const BILDDATEIEN = {
-  basso: 'basso.webp', riff: 'riff.webp', bear: 'bear.webp', rex: 'rex.webp',
-  leo: 'leo.webp', tigris: 'tigris.webp',
-  cut_leo: 'cut_leo.jpg', cut_tiger: 'cut_tiger.jpg',
-  mondtal: 'mondtal.jpg', mond: 'mond.webp'
-};
+// Bilddateien: pro Charakter 3 Haltungen (<id>_haltung1..3) + Hintergründe
+const CHARAKTER_IDS = ['basso', 'coolcat', 'riff', 'rex', 'bear', 'glut'];
+const HINTERGRUND_IDS = ['synthwave', 'spielhalle', 'retro', 'gamingzimmer'];
+const BILDDATEIEN = {};
+for (const id of CHARAKTER_IDS) for (const n of [1, 2, 3]) BILDDATEIEN[`${id}_haltung${n}`] = `${id}_haltung${n}.webp`;
+for (const id of HINTERGRUND_IDS) BILDDATEIEN[`hintergrund_${id}`] = `hintergrund_${id}.webp`;
 
 const BREITE = 1280, HOEHE = 720;      // logische Auflösung
 const BUEHNEN_BREITE = 1800;           // Arena ist breiter als der Bildschirm (Kamera folgt)
@@ -66,50 +66,60 @@ const SCHWIERIGKEITEN = {
 /* =====================================================================
    2. CHARAKTERDATEN
    Werte: Tempo / Kraft / Verteidigung (1–5), Summe immer 9.
-   typ 'ganz'  = Bild zeigt den ganzen Körper
-   typ 'buste' = Bild zeigt Kopf/Oberkörper, Beine werden dazugezeichnet
-   anker = horizontale Körpermitte im Bild (0–1), blick = 1 schaut im Bild nach rechts, -1 nach links
-   portrait = Kopfausschnitt (Mitte x/y und Größe relativ zur Bildhöhe)
+   Jeder Charakter hat 3 Haltungsbilder mit gleicher Leinwand: Körpermitte = Bildmitte, Füße = Unterkante.
+   bildHoehe = Anzeigehöhe der Leinwand, hoehe/breite = Trefferfläche (Körper)
+   blick = Blickrichtung je Haltung im Originalbild (1 = rechts, -1 = links)
+   portrait = Kopfausschnitt in Haltung 1 (Mitte x/y und Größe relativ zur Bildhöhe)
    ===================================================================== */
 const CHARAKTERE = [
-  { id: 'basso', name: 'Basso', tier: 'Luchs mit E-Bass', gruppe: 'Die Band', typ: 'ganz',
-    hoehe: 320, anker: 0.52, blick: 1, breite: 150, tempo: 4, kraft: 2, vert: 3,
-    farbe: '#ff2a2a', arena: 'buehne', klang: 'bass', portrait: { cx: 0.34, cy: 0.16, s: 0.34 },
-    spezial: { name: 'Bass-Druckwelle', text: 'Eine tiefe Schallwelle rollt am Boden entlang (nur geduckt blockbar).' },
-    superA: { name: 'DROP', text: 'Die Bühne bebt – wer am Boden steht, fliegt. Springen hilft!' },
+  { id: 'basso', name: 'Basso', tier: 'Luchs mit E-Bass', gruppe: 'Die Band',
+    bildHoehe: 310, hoehe: 300, breite: 130, blick: [1, 1, 1], tempo: 4, kraft: 2, vert: 3,
+    farbe: '#ff2a2a', arena: 'spielhalle', klang: 'bass', portrait: { cx: 0.55, cy: 0.16, s: 0.26 },
+    spezial: { name: 'Bass-Druckwelle', text: 'Tiefe Schallwelle am Boden – nur geduckt blockbar.' },
+    superA: { name: 'DROP', text: 'Der Boden bebt – wer steht, fliegt. Springen hilft!' },
     sprueche: ['Das war nur der Soundcheck.', 'Tiefe Frequenzen, tiefe Treffer.', 'Spür den Bass!'] },
-  { id: 'riff', name: 'Riff', tier: 'Tiger mit E-Gitarre', gruppe: 'Die Band', typ: 'ganz',
-    hoehe: 350, anker: 0.44, blick: 1, breite: 140, tempo: 3, kraft: 4, vert: 2,
-    farbe: '#ff2a2a', arena: 'buehne', klang: 'gitarre', cutin: 'cut_tiger', portrait: { cx: 0.45, cy: 0.14, s: 0.3 },
-    spezial: { name: 'Gitarrenschwung', text: 'Wirbelt mit der Gitarre nach vorn – bis zu drei Treffer.' },
-    superA: { name: 'POWER-CHORD', text: 'Eine riesige rote Klangwelle rollt über die Bühne.' },
+  { id: 'coolcat', name: 'Cool Cat', tier: 'Katze mit Kopfhörern', gruppe: 'Die Band',
+    bildHoehe: 282, hoehe: 270, breite: 110, blick: [-1, 1, -1], tempo: 5, kraft: 2, vert: 2,
+    farbe: '#3aa0ff', arena: 'neon', klang: 'chill', portrait: { cx: 0.45, cy: 0.2, s: 0.3 },
+    spezial: { name: 'Blendung', text: 'Die Sonnenbrille blitzt – betäubt den Gegner kurz.' },
+    superA: { name: 'CHILL-MODUS', text: 'Bass-Welle aus den Kopfhörern – 3 Sek. Zeitlupe.' },
+    sprueche: ['Bleib locker.', 'Zu laut? Gibt’s nicht.', 'Ich hab nicht mal die Brille abgesetzt.'] },
+  { id: 'riff', name: 'Riff', tier: 'Tiger mit E-Gitarre', gruppe: 'Die Band',
+    bildHoehe: 358, hoehe: 340, breite: 140, blick: [1, 1, -1], tempo: 3, kraft: 4, vert: 2,
+    farbe: '#ff2a2a', arena: 'gamingzimmer', klang: 'gitarre', portrait: { cx: 0.6, cy: 0.14, s: 0.26 },
+    spezial: { name: 'Gitarrenschwung', text: 'Gitarrenwirbel nach vorn – bis zu drei Treffer.' },
+    superA: { name: 'POWER-CHORD', text: 'Eine riesige rote Klangwelle rollt los.' },
     sprueche: ['Zugabe? Gern.', 'Das war ein Solo, kein Kampf.', 'Laut ist gut. Lauter ist besser.'] },
-  { id: 'bear', name: 'Laserbear', tier: 'Bär mit Laserschwert', gruppe: 'Die Einzelgänger', typ: 'ganz',
-    hoehe: 365, anker: 0.46, blick: -1, breite: 130, tempo: 2, kraft: 4, vert: 3,
-    farbe: '#ff3fb4', arena: 'mondtal', klang: 'laser', portrait: { cx: 0.55, cy: 0.13, s: 0.26 },
-    spezial: { name: 'Schwertwurf', text: 'Das Laserschwert fliegt als Bumerang – und kommt zurück.' },
-    superA: { name: 'LASER-WIRBELSTURM', text: 'Ein pinker Wirbel aus Licht, der alles mitreißt.' },
-    sprueche: ['Brumm.', 'Pink ist eine Kampfansage.', 'Möge der Honig mit dir sein.'] },
-  { id: 'rex', name: 'Rex Aloha', tier: 'T-Rex im Hawaiihemd', gruppe: 'Die Einzelgänger', typ: 'ganz',
-    hoehe: 350, anker: 0.56, blick: 1, breite: 150, tempo: 2, kraft: 5, vert: 2,
-    farbe: '#ff2d8f', arena: 'strand', klang: 'bruell', portrait: { cx: 0.73, cy: 0.12, s: 0.32 },
-    spezial: { name: 'Schwanzfeger', text: 'Tiefer Schwanzhieb mit großer Reichweite, wirft um.' },
-    superA: { name: 'HIBISKUS-STURM', text: 'Ein Regen aus pinken Blüten prasselt auf den Gegner.' },
+  { id: 'rex', name: 'Rex Aloha', tier: 'T-Rex im Hawaiihemd', gruppe: 'Die Einzelgänger',
+    bildHoehe: 359, hoehe: 330, breite: 140, blick: [1, 1, 1], tempo: 2, kraft: 5, vert: 2,
+    farbe: '#ff2d8f', arena: 'retro', klang: 'bruell', portrait: { cx: 0.64, cy: 0.17, s: 0.32 },
+    spezial: { name: 'Schwanzfeger', text: 'Tiefer Schwanzhieb mit Reichweite, wirft um.' },
+    superA: { name: 'HIBISKUS-STURM', text: 'Pinke Blüten prasseln auf den Gegner.' },
     sprueche: ['Aloha – und tschüss!', 'Kurze Arme, lange Reichweite.', 'Das Hemd bleibt sauber.'] },
-  { id: 'leo', name: 'Leo Umbra', tier: 'Löwe mit Kapuze', gruppe: 'Der Kapuzen-Orden', typ: 'buste',
-    hoehe: 275, beine: 95, anker: 0.5, blick: 1, breite: 140, tempo: 3, kraft: 4, vert: 2,
-    farbe: '#e8a13a', arena: 'tempel', klang: 'bruell', cutin: 'cut_leo', portrait: { cx: 0.5, cy: 0.43, s: 0.42 },
-    spezial: { name: 'Tintenklauen', text: 'Schneller Krallensprung nach vorn mit Tintenspur.' },
-    superA: { name: 'KÖNIGSBRÜLLER', text: 'Eine Schockwelle rast über den ganzen Bildschirm.' },
-    sprueche: ['Der Orden schweigt. Ich nicht.', 'Knie nieder vor der Tinte.', 'Ein König braucht keine Krone.'] },
-  { id: 'tigris', name: 'Tigris', tier: 'Tiger mit Kapuze', gruppe: 'Der Kapuzen-Orden', typ: 'buste',
-    hoehe: 275, beine: 95, anker: 0.5, blick: 1, breite: 150, tempo: 4, kraft: 4, vert: 1,
-    farbe: '#ff8a1c', arena: 'tempel', klang: 'bruell', cutin: 'cut_tiger', portrait: { cx: 0.5, cy: 0.42, s: 0.45 },
-    spezial: { name: 'Krallen-Sprint', text: 'Blitzschneller Sprint durch den Gegner hindurch.' },
-    superA: { name: 'SCHATTENWIRBEL', text: 'Trifft der Sprint, folgt eine Serie aus sechs Schattenhieben.' },
-    sprueche: ['Du hast mich nicht kommen sehen.', 'Streifen sind Schatten.', 'Zu langsam.'] }
+  { id: 'bear', name: 'Laserbear', tier: 'Bär mit Laserschwert', gruppe: 'Die Einzelgänger',
+    bildHoehe: 420, hoehe: 345, breite: 135, blick: [1, 1, -1], tempo: 2, kraft: 4, vert: 3,
+    farbe: '#ff3fb4', arena: 'neon', klang: 'laser', portrait: { cx: 0.55, cy: 0.29, s: 0.24 },
+    spezial: { name: 'Schwertwurf', text: 'Das Laserschwert fliegt als Bumerang zurück.' },
+    superA: { name: 'LASER-WIRBELSTURM', text: 'Ein pinker Lichtwirbel, der alles mitreißt.' },
+    sprueche: ['Brumm.', 'Pink ist eine Kampfansage.', 'Möge der Honig mit dir sein.'] },
+  { id: 'glut', name: 'Glut', tier: 'Fuchs mit Glutschwertern', gruppe: 'Die Einzelgänger',
+    bildHoehe: 445, hoehe: 315, breite: 120, blick: [1, 1, 1], tempo: 4, kraft: 3, vert: 2,
+    farbe: '#ff8a1c', arena: 'spielhalle', klang: 'glut', portrait: { cx: 0.54, cy: 0.43, s: 0.22 },
+    spezial: { name: 'Glutsprung', text: 'Blitzschneller Sprung durch den Gegner hindurch.' },
+    superA: { name: 'FEUERWIRBEL', text: 'Trifft der Sprung, folgen sechs Glutschwert-Hiebe.' },
+    sprueche: ['Nur ein Funke. Mehr war nicht nötig.', 'Zwei Klingen, ein Gedanke.', 'Zu langsam.'] }
 ];
 const CHAR = Object.fromEntries(CHARAKTERE.map(c => [c.id, c]));
+
+/* Haltungssystem: welche Haltung (1–3) in welchem Zustand gezeigt wird.
+   Einzelne Angriffe können mit dem Feld `haltung` abweichen. */
+const HALTUNG_FUER = {
+  stand: 1, lauf: 1, ducken: 1, block: 1, blockstun: 1, treffer: 1, fallen: 1, liegen: 1, ko: 1, aufstehen: 1,
+  sprung: 3, sieg: 3,
+  angriff: 2,       // alle Angriffe am Boden, Spezial- und Super-Attacken
+  luftangriff: 3    // Angriffe im Sprung
+};
+const HALTUNG_UEBERGANG = 5;  // Frames Überblendung beim Wechsel
 
 // Grundangriffe (für alle gleich, Schaden wird über Kraft/Verteidigung skaliert)
 // hoehe = [unten, oben] als Anteil der Körperhöhe, gemessen ab den Füßen
@@ -166,27 +176,30 @@ function erstelleAttacken(id) {
             w: 56, h: 56, art: 'bluete', leben: 120, dreh: Math.random() * 6, prall: false,
             m: { schaden: 27, stufe: 'mitte', knock: 2, stun: 16, blockstun: 8, stop: 3 } }));
         } } };
-    case 'leo': return {
-      spezial: { name: 'Tintenklauen', start: 9, aktiv: 12, erholung: 18, schub: 15, schaden: 105, reichweite: 115, hoehe: [0.25, 0.9],
-        knock: 13, stun: 22, blockstun: 14, stufe: 'mitte', stop: 8, wackeln: 5, klang: 'bruell', fx: 'klaue', spur: true, typ: 'dash' },
-      superA: { name: 'KÖNIGSBRÜLLER', start: 14, aktiv: 3, erholung: 34, hitbox: false, klang: 'bruell', typ: 'welle',
-        geschoss: k => new Geschoss({ besitzer: k, x: k.x, y: BODEN - 150, vx: 0, w: 40, h: 320, art: 'bruellwelle', leben: 45, welle: true,
-          m: { schaden: 230, stufe: 'mitte', knock: 12, umwerfen: true, blockstun: 20, stop: 12, wackeln: 16 } }) } };
-    case 'tigris': return {
-      spezial: { name: 'Krallen-Sprint', start: 7, aktiv: 14, erholung: 16, schub: 22, durch: true, schaden: 92, reichweite: 95, hoehe: [0.2, 0.9],
-        knock: 8, stun: 22, blockstun: 12, stufe: 'mitte', stop: 7, klang: 'bruell', fx: 'klaue', spur: true, typ: 'dash' },
-      superA: { name: 'SCHATTENWIRBEL', start: 6, aktiv: 16, erholung: 22, schub: 24, durch: true, schaden: 40, reichweite: 100, hoehe: [0.1, 0.95],
-        knock: 0, stun: 60, blockstun: 16, stufe: 'mitte', stop: 6, klang: 'bruell', fx: 'klaue', spur: true, typ: 'dash',
+    case 'coolcat': return {
+      spezial: { name: 'Blendung', start: 7, aktiv: 2, erholung: 18, hitbox: false, klang: 'chill', typ: 'nah',
+        geschoss: k => new Geschoss({ besitzer: k, x: k.x + k.richtung * 70, y: k.y - k.hoehe * 0.8, vx: k.richtung * 15, w: 120, h: 130, art: 'blendung', leben: 10,
+          m: { schaden: 45, stufe: 'mitte', knock: 2, stun: 42, blockstun: 10, stop: 5 } }) },
+      superA: { name: 'CHILL-MODUS', start: 12, aktiv: 3, erholung: 28, hitbox: false, klang: 'chill', typ: 'welle',
+        geschoss: k => new Geschoss({ besitzer: k, x: k.x, y: BODEN - 150, vx: 0, w: 40, h: 320, art: 'schallwelle', leben: 14, welle: true, wachstum: 40,
+          m: { schaden: 130, stufe: 'mitte', knock: 6, stun: 30, blockstun: 16, stop: 10, wackeln: 8, verlangsamen: 180 } }) } };
+    case 'glut': return {
+      spezial: { name: 'Glutsprung', start: 7, aktiv: 14, erholung: 16, schub: 21, durch: true, schaden: 95, reichweite: 100, hoehe: [0.2, 0.9],
+        knock: 8, stun: 22, blockstun: 12, stufe: 'mitte', stop: 7, klang: 'glut', fx: 'klaue', spur: true, typ: 'dash' },
+      superA: { name: 'FEUERWIRBEL', start: 6, aktiv: 16, erholung: 22, schub: 24, durch: true, schaden: 40, reichweite: 105, hoehe: [0.1, 0.95],
+        knock: 0, stun: 60, blockstun: 16, stufe: 'mitte', stop: 6, klang: 'glut', fx: 'klaue', spur: true, typ: 'dash',
         beiTreffer: (k, g, erg) => { if (erg === 'treffer' && g.lp > 0) { k.angriff.serie = { n: 0, t: 0 }; g.zustand = 'treffer'; g.stunDauer = 90; g.vx = 0; } } } };
   }
 }
 
+// Arenen: Hintergrundbild, Zoom, vertikaler Bildausschnitt (0 = oben, 1 = unten), Abdunklung, Bodenfarbe
 const ARENEN = [
-  { id: 'mondtal', name: 'Mondtal' },
-  { id: 'buehne', name: 'Konzertbühne' },
-  { id: 'tempel', name: 'Tinten-Tempel' },
-  { id: 'strand', name: 'Strand bei Nacht' }
+  { id: 'neon', name: 'Neon-Horizont', bild: 'hintergrund_synthwave', zoom: 1.0, fokusY: 1.0, dunkel: 0.1, boden: '#ff2d95', raster: false },
+  { id: 'spielhalle', name: 'Spielhalle', bild: 'hintergrund_spielhalle', zoom: 1.0, fokusY: 0.55, dunkel: 0.25, boden: '#19d3ff' },
+  { id: 'retro', name: 'Retro-Schreibtisch', bild: 'hintergrund_retro', zoom: 1.0, fokusY: 0.4, dunkel: 0.4, boden: '#ff3fb4' },
+  { id: 'gamingzimmer', name: 'Gaming-Zimmer', bild: 'hintergrund_gamingzimmer', zoom: 1.0, fokusY: 0.6, dunkel: 0.3, boden: '#b44dff' }
 ];
+const ARENA = Object.fromEntries(ARENEN.map(a => [a.id, a]));
 
 /* =====================================================================
    3. HILFSFUNKTIONEN
@@ -255,6 +268,8 @@ function laden() {
       for (const p of ['p1', 'p2']) for (const a of AKTIONEN) if (Array.isArray(d.tasten[p][a]) && d.tasten[p][a].length) spielstand.tasten[p][a] = d.tasten[p][a];
     }
     if (d.statistik) spielstand.statistik = Object.assign(spielstand.statistik, d.statistik);
+    // Einträge entfernter Charaktere löschen
+    for (const feld of ['siege', 'arcade']) for (const id of Object.keys(spielstand.statistik[feld] || {})) if (!CHAR[id]) delete spielstand.statistik[feld][id];
   } catch (e) { /* localStorage nicht verfügbar – dann eben ohne Speichern */ }
 }
 function speichern() { try { localStorage.setItem(SPEICHER_SCHLUESSEL, JSON.stringify(spielstand)); } catch (e) { } }
@@ -328,6 +343,8 @@ const Klang = {
       case 'gitarre': [82.4, 123.5, 164.8].forEach((f, i) => this.ton(f, 0.9, 'sawtooth', 0.12, f * 0.98, this.verzerrer, i * 0.015)); break;
       case 'laser': this.ton(180, 0.35, 'sawtooth', 0.16, 900); this.ton(900, 0.3, 'sine', 0.12, 300); break;
       case 'bruell': this.rauschen(0.55, 500, 0.5, 'lowpass', 150); this.ton(95, 0.5, 'sawtooth', 0.2, 60, this.verzerrer); break;
+      case 'chill': this.ton(55, 0.7, 'sine', 0.6, 40); this.ton(880, 0.25, 'triangle', 0.12, 1320); this.rauschen(0.3, 6000, 0.12, 'highpass'); break;
+      case 'glut': this.rauschen(0.35, 2500, 0.35, 'bandpass', 600); this.ton(320, 0.3, 'sawtooth', 0.12, 120, this.verzerrer); break;
     }
   }
 };
@@ -385,7 +402,8 @@ const Musik = {
    6. BILDER LADEN UND AUFBEREITEN
    ===================================================================== */
 const BILDER = {};      // rohe Bilder
-const SPRITES = {};     // pro Charakter: normal, rot, weiss, schatten, portrait
+const SPRITES = {};     // pro Charakter: haltungen[0..2] mit normal/rot/weiss/schatten, dazu portrait
+const HINTERGRUND = {};  // vorbereitete Arena-Hintergründe und Menühintergrund
 let ladeFortschritt = 0, ladeFertig = false;
 
 function ladeBilder() {
@@ -417,23 +435,60 @@ function eingefaerbt(quelle, farbe, alpha) {
 
 function bereiteSpritesVor() {
   for (const def of CHARAKTERE) {
-    const img = BILDER[def.id];
-    let normal;
-    if (img) { normal = neueLeinwand(img.width, img.height); normal.getContext('2d').drawImage(img, 0, 0); }
-    else normal = platzhalter(def);
-    // Portrait: quadratischer Kopfausschnitt
+    const haltungen = [1, 2, 3].map(n => {
+      const img = BILDER[`${def.id}_haltung${n}`];
+      let normal;
+      if (img) { normal = neueLeinwand(img.width, img.height); normal.getContext('2d').drawImage(img, 0, 0); }
+      else normal = platzhalter(def);
+      return { normal, rot: eingefaerbt(normal, '#ff1010', 0.65), weiss: eingefaerbt(normal, '#ffffff', 0.85), schatten: eingefaerbt(normal, def.farbe, 0.9) };
+    });
+    // Portrait: quadratischer Kopfausschnitt aus Haltung 1
+    const normal = haltungen[0].normal;
     const p = neueLeinwand(160, 160), pg = p.getContext('2d');
-    const grd = pg.createLinearGradient(0, 0, 0, 160); grd.addColorStop(0, '#3a3a3a'); grd.addColorStop(1, '#0c0c0c');
+    const grd = pg.createLinearGradient(0, 0, 0, 160); grd.addColorStop(0, '#3a2a55'); grd.addColorStop(1, '#0c0814');
     pg.fillStyle = grd; pg.fillRect(0, 0, 160, 160);
     const s = def.portrait.s * normal.height;
     pg.drawImage(normal, def.portrait.cx * normal.width - s / 2, def.portrait.cy * normal.height - s / 2, s, s, 0, 0, 160, 160);
-    SPRITES[def.id] = {
-      normal, portrait: p,
-      rot: eingefaerbt(normal, '#ff1010', 0.65),
-      weiss: eingefaerbt(normal, '#ffffff', 0.85),
-      schatten: eingefaerbt(normal, def.farbe, 0.9)
-    };
+    SPRITES[def.id] = { haltungen, portrait: p };
   }
+}
+
+// Zeichnet eine Haltung eines Charakters mit Fußpunkt (x, y), Höhe h und Blickrichtung r (1 = rechts)
+function zeichneFigur(c, def, haltung, x, y, h, r = 1, variante = 'normal') {
+  const bild = SPRITES[def.id].haltungen[haltung - 1][variante], w = bild.width * h / bild.height;
+  c.save(); c.translate(x, y); c.scale(r * def.blick[haltung - 1], 1);
+  c.drawImage(bild, -w / 2, -h, w, h); c.restore();
+}
+
+// Hintergründe einmalig vorbereiten: Ausschnitt (cover, ohne Verzerrung), Abdunklung, Bodenverlauf
+const PARALLAXE = 160;   // so viel breiter als der Bildschirm ist das Arenabild
+function bereiteHintergruendeVor() {
+  const passend = (img, w, h, zoom, fokusY, c) => {
+    const s = Math.max(w / img.width, h / img.height) * zoom, bw = img.width * s, bh = img.height * s;
+    c.drawImage(img, (w - bw) / 2, -(bh - h) * fokusY, bw, bh);
+  };
+  for (const a of ARENEN) {
+    const c = neueLeinwand(BREITE + PARALLAXE, HOEHE), g = c.getContext('2d');
+    g.fillStyle = '#0a0612'; g.fillRect(0, 0, c.width, c.height);
+    const img = BILDER[a.bild];
+    if (img) passend(img, c.width, c.height, a.zoom, a.fokusY, g);
+    g.fillStyle = `rgba(5,2,15,${a.dunkel})`; g.fillRect(0, 0, c.width, c.height);
+    // Boden: dunkler Verlauf, damit Figuren und Anzeigen gut lesbar bleiben
+    const v = g.createLinearGradient(0, BODEN - 60, 0, HOEHE);
+    v.addColorStop(0, 'rgba(5,2,15,0)'); v.addColorStop(0.35, 'rgba(5,2,15,0.55)'); v.addColorStop(1, 'rgba(5,2,15,0.9)');
+    g.fillStyle = v; g.fillRect(0, BODEN - 60, c.width, HOEHE);
+    HINTERGRUND[a.id] = c;
+  }
+  // Menühintergrund: Synthwave, stärker abgedunkelt
+  const m = neueLeinwand(BREITE, HOEHE), mg = m.getContext('2d');
+  mg.fillStyle = '#0a0612'; mg.fillRect(0, 0, BREITE, HOEHE);
+  if (BILDER.hintergrund_synthwave) passend(BILDER.hintergrund_synthwave, BREITE, HOEHE, 1, 1, mg);
+  mg.fillStyle = 'rgba(5,2,15,0.55)'; mg.fillRect(0, 0, BREITE, HOEHE);
+  HINTERGRUND.menue = m;
+  const t = neueLeinwand(BREITE, HOEHE), tg = t.getContext('2d');
+  tg.drawImage(m, 0, 0);
+  if (BILDER.hintergrund_synthwave) { tg.globalAlpha = 0.6; passend(BILDER.hintergrund_synthwave, BREITE, HOEHE, 1, 1, tg); tg.globalAlpha = 1; }
+  HINTERGRUND.titel = t;
 }
 
 /* =====================================================================
@@ -654,7 +709,7 @@ class Kaempfer {
   constructor(def, seite, steuer) {
     this.def = def; this.seite = seite; this.steuer = steuer; this.siege = 0; this.energie = 0;
     this.attacken = erstelleAttacken(def.id);
-    this.hoehe = def.typ === 'buste' ? def.hoehe + def.beine - 18 : def.hoehe;
+    this.hoehe = def.hoehe;
     this.sprungKraft = 16.5 + def.tempo * 0.45;
     this.gehTempo = 2.8 + def.tempo * 0.6;
     this.zuruecksetzen();
@@ -666,7 +721,8 @@ class Kaempfer {
     this.zustand = 'stand'; this.zt = 0; this.angriff = null; this.stunDauer = 0;
     this.unverw = 0; this.blitz = 0; this.kette = 0; this.ketteTimer = 0; this.spezialCD = 0;
     this.combo = 0; this.comboAnzeige = 0; this.comboTimer = 0; this.anim = Math.random() * 100; this.laufPhase = 0;
-    this.luftAngriffGenutzt = false; this.geschoss = null; this.spur = []; this.hitstop = 0;
+    this.luftAngriffGenutzt = false; this.geschoss = null; this.spur = []; this.hitstop = 0; this.verlangsamt = 0;
+    this.haltung = 1; this.vorherHaltung = 1; this.wechselT = HALTUNG_UEBERGANG;
     if (this.steuer.leeren) this.steuer.leeren();
   }
   amBoden() { return this.y >= BODEN - 0.5; }
@@ -680,6 +736,19 @@ class Kaempfer {
     return this.steuer.gehalten('block') && ['stand', 'lauf', 'ducken'].includes(this.zustand);
   }
   richtungsEingabe() { return (this.steuer.gehalten('rechts') ? 1 : 0) - (this.steuer.gehalten('links') ? 1 : 0); }
+  // Haltung (1–3) passend zum aktuellen Zustand, siehe HALTUNG_FUER
+  zielHaltung() {
+    if (this.zustand === 'angriff' && this.angriff) {
+      const m = this.angriff.m;
+      return m.haltung || (m.luft ? HALTUNG_FUER.luftangriff : HALTUNG_FUER.angriff);
+    }
+    return HALTUNG_FUER[this.zustand] || 1;
+  }
+  aktualisiereHaltung() {
+    const ziel = this.zielHaltung();
+    if (ziel !== this.haltung) { this.vorherHaltung = this.haltung; this.haltung = ziel; this.wechselT = 0; }
+    else if (this.wechselT < HALTUNG_UEBERGANG) this.wechselT++;
+  }
 
   starteAngriff(m, kampf) {
     this.zustand = 'angriff'; this.zt = 0;
@@ -737,8 +806,9 @@ class Kaempfer {
     // Lebensbalken-Verzögerung
     if (this.lpAnzeige > this.lp) { if (this.lpVerz > 0) this.lpVerz--; else this.lpAnzeige = Math.max(this.lp, this.lpAnzeige - 6); }
     // Nachbilder für Sprints
-    if (this.angriff && this.angriff.m.spur && this.zt % 2 === 0) this.spur.push({ x: this.x, y: this.y, r: this.richtung, t: 12 });
+    if (this.angriff && this.angriff.m.spur && this.zt % 2 === 0) this.spur.push({ x: this.x, y: this.y, r: this.richtung, t: 12, h: this.haltung });
     this.spur = this.spur.filter(s => --s.t > 0);
+    this.aktualisiereHaltung();
   }
 
   freieAktion(g, kampf) {
@@ -765,14 +835,14 @@ class Kaempfer {
 
   angriffAktualisieren(g, kampf) {
     const a = this.angriff, m = a.m;
-    // Schattenwirbel-Serie (Tigris-Super): Phase eingefroren, 6 Hiebe
+    // Feuerwirbel-Serie (Glut-Super): Phase eingefroren, 6 Hiebe
     if (a.serie) {
       a.serie.t++;
       if (a.serie.t % 7 === 0) {
         a.serie.n++;
         if (g.lp <= 0 || !['treffer', 'gefesselt'].includes(g.zustand)) { a.serie = null; a.t = m.start + m.aktiv; return; }
         const seite = a.serie.n % 2 ? -1 : 1;
-        this.spur.push({ x: this.x, y: this.y, r: this.richtung, t: 14 });
+        this.spur.push({ x: this.x, y: this.y, r: this.richtung, t: 14, h: this.haltung });
         this.x = g.x + seite * 150; this.richtung = -seite;
         const letzter = a.serie.n >= 6;
         wendeTrefferAn(this, g, letzter ? { schaden: 60, unblockbar: true, umwerfen: true, knock: 14, stop: 12, wackeln: 12 } : { schaden: 36, unblockbar: true, stun: 40, knock: 0, stop: 3 }, this.richtung, kampf);
@@ -845,6 +915,7 @@ function wendeTrefferAn(a, d, m, dir, kampf) {
   if (a.combo >= 2) { a.comboAnzeige = a.combo; a.comboTimer = 70; }
   d.lp -= schaden; d.lpVerz = 40; d.blitz = 7; d.angriff = null;
   if (m.kette) { a.kette++; a.ketteTimer = 45; }
+  if (m.verlangsamen) d.verlangsamt = m.verlangsamen;
   if (d.lp <= 0) {
     d.lp = 0; d.zustand = 'fallen'; d.zt = 0; d.vy = -11; d.vx = dir * 9; kampf.koEintritt(a, d);
   } else if (m.umwerfen || !d.amBoden()) {
@@ -879,7 +950,7 @@ class Geschoss {
       if (this.t > 40 && Math.abs(this.x - this.besitzer.x) < 50 && Math.abs(this.y - (this.besitzer.y - this.besitzer.hoehe * 0.6)) < 120) this.lebt = false;
       this.y += ((this.besitzer.y - this.besitzer.hoehe * 0.62) - this.y) * 0.05;
     }
-    if (this.welle) this.w += 60;
+    if (this.welle) this.w += this.wachstum || 60;
     if (this.art === 'bluete') { this.dreh += 0.15; if (this.y > BODEN - 20) { this.lebt = false; for (let i = 0; i < 5; i++) kampf.partikel.push(tintenTropfen(this.x, BODEN - 5, '#ff2d8f', zufall(2, 5), -zufall(1, 5))); } }
     this.x += this.vx; this.y += this.vy;
     if (--this.leben <= 0 || this.x < -200 || this.x > BUEHNEN_BREITE + 200) this.lebt = false;
@@ -887,160 +958,34 @@ class Geschoss {
 }
 
 /* =====================================================================
-   10. ARENEN (prozedural gezeichnet + Mondtal aus Bild)
+   10. ARENEN (Hintergrundbilder mit Parallaxe und Neon-Boden)
    ===================================================================== */
+// Bodenrisse für den Basso-Super
 const arenaDeko = (() => {
   const r = saatZufall(42);
-  return {
-    sterne: Array.from({ length: 120 }, () => ({ x: r() * 2200, y: r() * 380, s: r() * 2 + 0.5, p: r() * 6 })),
-    publikum: Array.from({ length: 60 }, (_, i) => ({ x: i * 34 + r() * 10, h: 30 + r() * 30, p: r() * 6 })),
-    tropfen: Array.from({ length: 26 }, () => ({ x: r() * 2400, y: r() * 600, v: 2 + r() * 4, l: 20 + r() * 50 })),
-    palmen: [{ x: 120, s: 1.1 }, { x: 520, s: 0.8 }, { x: 1500, s: 1.2 }, { x: 1950, s: 0.9 }],
-    risse: Array.from({ length: 30 }, () => ({ x: r() * 2400, w: 20 + r() * 80 }))
-  };
+  return { risse: Array.from({ length: 30 }, () => ({ x: r() * 2400, w: 20 + r() * 80 })) };
 })();
 
 function zeichneArena(id, camX, t, c = ctx) {
-  const par = f => -camX * f;
+  const a = ARENA[id], bild = HINTERGRUND[id];
+  const anteil = begrenze(camX / (BUEHNEN_BREITE - BREITE), 0, 1);
+  if (bild) c.drawImage(bild, -anteil * PARALLAXE, 0);
+  else { c.fillStyle = '#0a0612'; c.fillRect(0, 0, BREITE, HOEHE); }
   c.save();
-  switch (id) {
-    case 'mondtal': {
-      c.fillStyle = '#000'; c.fillRect(0, 0, BREITE, HOEHE);
-      const img = BILDER.mondtal;
-      if (img) {
-        const tw = img.width * 1.05, th = img.height * 1.05, y0 = BODEN + 12 - 600 * 1.05;
-        const basis = BREITE / 2 - tw / 2 + par(0.45) + (BUEHNEN_BREITE - BREITE) / 2 * 0.45;
-        for (let i = -2; i <= 2; i++) {
-          c.save(); c.translate(basis + i * tw, y0);
-          if (i % 2) { c.translate(tw, 0); c.scale(-1, 1); }
-          c.drawImage(img, 0, 0, tw, th); c.restore();
-        }
-        c.fillStyle = '#6d6d6d'; c.fillRect(0, y0 + th - 2, BREITE, HOEHE);
-        const dunkel = c.createLinearGradient(0, 0, 0, BODEN);
-        dunkel.addColorStop(0, 'rgba(0,0,0,0.55)'); dunkel.addColorStop(1, 'rgba(0,0,0,0.3)');
-        c.fillStyle = dunkel; c.fillRect(0, 0, BREITE, BODEN);
-        if (BILDER.mond) c.drawImage(BILDER.mond, 150 + par(0.05), 40, 110, 130);
-      }
-      const g = c.createLinearGradient(0, BODEN - 20, 0, HOEHE); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.75)');
-      c.fillStyle = g; c.fillRect(0, BODEN - 20, BREITE, HOEHE);
-      break;
+  // Bodenraster, das mit der Kamera mitläuft (nicht bei Bildern mit eigenem Raster)
+  if (a.raster !== false) {
+    c.strokeStyle = a.boden; c.globalAlpha = 0.22; c.lineWidth = 1.5;
+    const versatz = camX % 140;
+    for (let i = -14; i <= 14; i++) {
+      const x0 = BREITE / 2 + i * 140 - versatz;
+      c.beginPath(); c.moveTo(x0, BODEN + 2); c.lineTo(BREITE / 2 + (x0 - BREITE / 2) * 2.4, HOEHE); c.stroke();
     }
-    case 'buehne': {
-      const g = c.createLinearGradient(0, 0, 0, HOEHE); g.addColorStop(0, '#050505'); g.addColorStop(1, '#1b1b1b');
-      c.fillStyle = g; c.fillRect(0, 0, BREITE, HOEHE);
-      // Traversen
-      c.strokeStyle = '#444'; c.lineWidth = 3;
-      for (let y of [40, 70]) { c.beginPath(); c.moveTo(0, y); c.lineTo(BREITE, y); c.stroke(); }
-      for (let x = par(0.8) % 30; x < BREITE; x += 30) { c.beginPath(); c.moveTo(x, 40); c.lineTo(x + 30, 70); c.stroke(); }
-      // Scheinwerferkegel
-      c.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < 5; i++) {
-        const sx = 160 + i * 240, w = Math.sin(t * 0.012 + i * 1.7) * 0.5;
-        const ex = sx + Math.sin(w) * 700, farbe = i % 2 ? 'rgba(255,40,40,' : 'rgba(255,255,255,';
-        const lg = c.createLinearGradient(sx, 70, ex, BODEN);
-        lg.addColorStop(0, farbe + '0.28)'); lg.addColorStop(1, farbe + '0)');
-        c.fillStyle = lg; c.beginPath(); c.moveTo(sx - 8, 70); c.lineTo(sx + 8, 70); c.lineTo(ex + 140, BODEN); c.lineTo(ex - 140, BODEN); c.fill();
-      }
-      c.globalCompositeOperation = 'source-over';
-      // Boxentürme
-      for (let i = -1; i < 8; i++) {
-        const x = i * 300 + par(0.6) + 40;
-        c.fillStyle = '#0d0d0d'; c.fillRect(x, 330, 150, 300); c.strokeStyle = '#555'; c.lineWidth = 3; c.strokeRect(x, 330, 150, 300);
-        for (let j = 0; j < 3; j++) { c.fillStyle = '#222'; c.beginPath(); c.arc(x + 75, 380 + j * 95, 36, 0, 7); c.fill(); c.strokeStyle = '#666'; c.stroke();
-          c.fillStyle = '#000'; c.beginPath(); c.arc(x + 75, 380 + j * 95, 14 + Math.sin(t * 0.3 + j) * 2, 0, 7); c.fill(); }
-      }
-      // rote Bassdrum mit Logo
-      const bx = BREITE / 2 + par(0.55) + (BUEHNEN_BREITE - BREITE) / 2 * 0.55;
-      c.fillStyle = ROT; c.beginPath(); c.arc(bx, 470, 150, 0, 7); c.fill(); c.lineWidth = 10; c.strokeStyle = '#111'; c.stroke();
-      c.lineWidth = 3; c.strokeStyle = '#fff'; c.beginPath(); c.arc(bx, 470, 128, 0, 7); c.stroke();
-      text('TINTE', bx, 445, 44, '#fff', 'center', 5, c); text('& KLAUE', bx, 492, 34, '#111', 'center', 0, c);
-      // Bühnenboden
-      c.fillStyle = '#2a2a2a'; c.fillRect(0, BODEN, BREITE, HOEHE - BODEN);
-      c.strokeStyle = '#161616'; c.lineWidth = 2;
-      for (let y = BODEN + 12; y < HOEHE; y += 16) { c.beginPath(); c.moveTo(0, y); c.lineTo(BREITE, y); c.stroke(); }
-      c.fillStyle = '#e8e8e8'; c.fillRect(0, BODEN, BREITE, 3);
-      break;
-    }
-    case 'tempel': {
-      const g = c.createLinearGradient(0, 0, 0, HOEHE); g.addColorStop(0, '#1d1d1d'); g.addColorStop(1, '#050505');
-      c.fillStyle = g; c.fillRect(0, 0, BREITE, HOEHE);
-      // ferne Säulen
-      for (let i = -1; i < 12; i++) { const x = i * 190 + par(0.3) % 190; c.fillStyle = '#2b2b2b'; c.fillRect(x, 60, 60, BODEN - 60); c.fillStyle = '#353535'; c.fillRect(x - 10, 60, 80, 20); }
-      // Tempeltor mit rotem Siegel
-      const tx = BREITE / 2 + par(0.5) + (BUEHNEN_BREITE - BREITE) / 2 * 0.5;
-      c.fillStyle = '#0a0a0a'; c.beginPath(); c.moveTo(tx - 170, BODEN); c.lineTo(tx - 170, 260); c.quadraticCurveTo(tx, 110, tx + 170, 260); c.lineTo(tx + 170, BODEN); c.fill();
-      c.strokeStyle = '#8a8a8a'; c.lineWidth = 6; c.stroke();
-      klecks(c, tx, 320, 52, ROT, 7);
-      c.strokeStyle = '#000'; c.lineWidth = 7; c.lineCap = 'round';
-      for (let i = -1; i <= 1; i++) { c.beginPath(); c.moveTo(tx - 22 + i * 16, 290); c.lineTo(tx + 10 + i * 16, 350); c.stroke(); }
-      // nahe Säulen mit Tuschelinien
-      for (let i = -1; i < 7; i++) {
-        const x = i * 420 + par(0.8) % 420 + 30;
-        c.fillStyle = '#8c8c8c'; c.fillRect(x, 0, 90, BODEN);
-        c.strokeStyle = '#111'; c.lineWidth = 3; c.strokeRect(x, -5, 90, BODEN + 5);
-        c.lineWidth = 2; for (let j = 0; j < 7; j++) { c.beginPath(); c.moveTo(x + 10 + j * 11, 30 + (j * 53) % 120); c.lineTo(x + 18 + j * 9, BODEN - 40 - (j * 37) % 90); c.stroke(); }
-        c.fillStyle = '#111'; c.fillRect(x - 12, 0, 114, 34); c.fillRect(x - 12, BODEN - 26, 114, 26);
-        // Laterne
-        const sw = Math.sin(t * 0.03 + i) * 0.12;
-        c.save(); c.translate(x + 45, 34); c.rotate(sw); c.strokeStyle = '#111'; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 80); c.stroke();
-        c.fillStyle = ROT; c.beginPath(); c.ellipse(0, 110, 26, 34, 0, 0, 7); c.fill(); c.strokeStyle = '#000'; c.lineWidth = 3; c.stroke(); c.restore();
-      }
-      // tropfende Tinte von oben
-      c.fillStyle = '#000';
-      for (const d of arenaDeko.tropfen) {
-        const x = ((d.x + par(0.7)) % 1400 + 1400) % 1400 - 60, y = (d.y + t * d.v) % 700;
-        c.fillRect(x, 0, 5, d.l * 0.6); c.beginPath(); c.ellipse(x + 2.5, y, 5, 9, 0, 0, 7); c.fill();
-      }
-      // Steinboden
-      c.fillStyle = '#9a9a9a'; c.fillRect(0, BODEN, BREITE, HOEHE - BODEN);
-      c.strokeStyle = '#2a2a2a'; c.lineWidth = 3;
-      for (let x = par(1) % 160 - 160; x < BREITE + 160; x += 160) { c.beginPath(); c.moveTo(x, BODEN); c.lineTo(x - 60, HOEHE); c.stroke(); }
-      c.beginPath(); c.moveTo(0, BODEN + 40); c.lineTo(BREITE, BODEN + 40); c.stroke();
-      c.fillStyle = '#111'; c.fillRect(0, BODEN, BREITE, 5);
-      break;
-    }
-    case 'strand': {
-      const g = c.createLinearGradient(0, 0, 0, 470); g.addColorStop(0, '#02030a'); g.addColorStop(1, '#16202f');
-      c.fillStyle = g; c.fillRect(0, 0, BREITE, HOEHE);
-      for (const s of arenaDeko.sterne) { const x = ((s.x + par(0.08)) % 1400 + 1400) % 1400 - 60; c.globalAlpha = 0.5 + Math.sin(t * 0.05 + s.p) * 0.4; c.fillStyle = '#fff'; c.fillRect(x, s.y, s.s, s.s); }
-      c.globalAlpha = 1;
-      const mx = 980 + par(0.1);
-      c.fillStyle = '#f2f2ea'; c.beginPath(); c.arc(mx, 150, 70, 0, 7); c.fill();
-      c.fillStyle = '#ddd'; c.beginPath(); c.arc(mx - 20, 135, 12, 0, 7); c.arc(mx + 25, 170, 9, 0, 7); c.fill();
-      // Meer
-      c.fillStyle = '#0a0f18'; c.fillRect(0, 440, BREITE, BODEN - 440);
-      c.strokeStyle = 'rgba(255,255,255,0.5)'; c.lineWidth = 2;
-      for (let i = 0; i < 9; i++) { const y = 455 + i * 20; c.beginPath(); for (let x = 0; x <= BREITE; x += 20) { const yy = y + Math.sin(x * 0.02 + t * 0.04 + i) * 3; x ? c.lineTo(x, yy) : c.moveTo(x, yy); } c.globalAlpha = 0.25 + i * 0.05; c.stroke(); }
-      c.globalAlpha = 0.4; c.fillStyle = '#fff'; for (let i = 0; i < 8; i++) c.fillRect(mx - 40 + Math.sin(t * 0.05 + i) * 20, 460 + i * 20, 80 - i * 6, 3); c.globalAlpha = 1;
-      // Palmen
-      for (const p of arenaDeko.palmen) {
-        const x = p.x + par(0.7);
-        c.save(); c.translate(x, BODEN); c.scale(p.s, p.s);
-        c.strokeStyle = '#000'; c.lineWidth = 22; c.lineCap = 'round'; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(40, -200, 10, -390); c.stroke();
-        c.fillStyle = '#000';
-        for (let b = 0; b < 7; b++) { const w = b / 7 * Math.PI * 2 + Math.sin(t * 0.02) * 0.08; c.save(); c.translate(10, -390); c.rotate(w); c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(90, -40, 170, 30); c.quadraticCurveTo(90, -5, 0, 10); c.fill(); c.restore(); }
-        for (let b = 0; b < 3; b++) zeichneBluete(c, -40 + b * 40, -30 - b * 12, 16, b);
-        c.restore();
-      }
-      // Sand
-      c.fillStyle = '#b9b2a2'; c.fillRect(0, BODEN, BREITE, HOEHE - BODEN);
-      c.fillStyle = '#958e7f'; for (let i = 0; i < 60; i++) { const x = ((i * 97 + par(1)) % 1400 + 1400) % 1400 - 60; c.fillRect(x, BODEN + 10 + (i * 37) % 70, 6, 3); }
-      c.fillStyle = '#111'; c.fillRect(0, BODEN, BREITE, 4);
-      break;
-    }
+    for (const y of [BODEN + 22, BODEN + 50]) { c.beginPath(); c.moveTo(0, y); c.lineTo(BREITE, y); c.stroke(); }
   }
+  // leuchtende Bodenlinie
+  c.globalAlpha = 0.8 + Math.sin(t * 0.05) * 0.1; c.shadowColor = a.boden; c.shadowBlur = 16;
+  c.strokeStyle = a.boden; c.lineWidth = 3; c.beginPath(); c.moveTo(0, BODEN + 2); c.lineTo(BREITE, BODEN + 2); c.stroke();
   c.restore();
-}
-
-function zeichneVordergrund(id, camX, t) {
-  if (id === 'buehne') { // Publikum als Silhouetten
-    ctx.fillStyle = '#000';
-    for (const p of arenaDeko.publikum) {
-      const x = ((p.x - camX * 1.25) % 2040 + 2040) % 2040 - 60, hop = Math.abs(Math.sin(t * 0.08 + p.p)) * 10;
-      ctx.beginPath(); ctx.arc(x, HOEHE - p.h * 0.6 - hop, 18, 0, 7); ctx.fill(); ctx.fillRect(x - 22, HOEHE - p.h * 0.6 - hop + 10, 44, 60);
-      if (p.p > 4.5) { ctx.fillRect(x + 14, HOEHE - p.h - 40 - hop, 8, 50); }
-    }
-  }
 }
 
 function zeichneBluete(c, x, y, r, drehung = 0) {
@@ -1067,60 +1012,60 @@ function erstelleArenaVorschau() {
    ===================================================================== */
 function zeichneKaempfer(k, camX, kampf) {
   const def = k.def, sp = SPRITES[def.id];
-  const bild = sp.normal;
-  const bust = def.typ === 'buste';
-  const bildH = def.hoehe, bildW = bild.width * bildH / bild.height;
-  let sx = 1, sy = 1, rot = 0, ox = 0, oy = 0, alpha = 1, variante = bild;
+  const bildH = def.bildHoehe;
+  let sx = 1, sy = 1, rot = 0, ox = 0, oy = 0, alpha = 1;
   const t = k.anim;
   switch (k.zustand) {
     case 'stand': case 'block': sy = 1 + Math.sin(t * 0.08) * 0.015; sx = 1 - Math.sin(t * 0.08) * 0.008; break;
-    case 'lauf': oy = -Math.abs(Math.sin(k.laufPhase)) * 10; rot = Math.sin(k.laufPhase) * 0.04 + 0.04; break;
-    case 'sprung': sy = 1 + begrenze(-k.vy * 0.008, -0.08, 0.1); sx = 1 / sy; rot = 0.08; break;
+    case 'lauf': oy = -Math.abs(Math.sin(k.laufPhase)) * 10; rot = Math.sin(k.laufPhase) * 0.04 + 0.03; break;
+    case 'sprung': sy = 1 + begrenze(-k.vy * 0.006, -0.06, 0.08); sx = 1 / sy; break;
     case 'ducken': sy = 0.64; sx = 1.1; break;
     case 'treffer': case 'blockstun': rot = -0.12; ox = -8; break;
     case 'fallen': rot = -0.6 - (k.zt * 0.04); break;
-    case 'liegen': case 'ko': rot = -Math.PI / 2 + 0.05; oy = -def.anker * bildW * 0.85; alpha = k.zustand === 'ko' ? 0.9 : 1; break;
-    case 'aufstehen': rot = -Math.PI / 2 * (1 - k.zt / 12); oy = -def.anker * bildW * 0.85 * (1 - k.zt / 12); break;
-    case 'sieg': oy = -Math.abs(Math.sin(t * 0.1)) * 26; sy = 1.03; break;
+    case 'liegen': case 'ko': rot = -Math.PI / 2 + 0.05; oy = -def.breite * 0.5; alpha = k.zustand === 'ko' ? 0.9 : 1; break;
+    case 'aufstehen': rot = -Math.PI / 2 * (1 - k.zt / 12); oy = -def.breite * 0.5 * (1 - k.zt / 12); break;
+    case 'sieg': oy = -Math.abs(Math.sin(t * 0.1)) * 26; break;
     case 'angriff': {
       const a = k.angriff, m = a.m, p = a.t - m.start;
-      if (m.tief) { sy = 0.64; sx = 1.1; }
-      if (p < 0) { rot = -0.06 * (a.t / m.start); ox = -6; }
-      else if (p < m.aktiv) { rot = m.luft ? 0.25 : 0.13; ox = 22; }
-      else { rot = 0.05; ox = 8; }
+      if (m.tief) { sy = 0.66; sx = 1.08; }
+      if (p < 0) { rot = -0.04 * (a.t / m.start); ox = -4; }
+      else if (p < m.aktiv) { rot = m.luft ? 0.12 : 0.06; ox = 14; }
+      else { rot = 0.02; ox = 5; }
       if (m.fx === 'wirbel' || m.fx === 'laserwirbel') { if (p >= 0 && p < m.aktiv) sx = Math.cos(a.t * 0.55); }
       if (m.fx === 'feger' && p >= 0 && p < m.aktiv + 4) { sx = Math.cos(a.t * 0.6); }
-      if (a.serie) { rot = 0.2; }
+      if (a.serie) { rot = 0.12; }
       break;
     }
   }
-  if (k.blitz > 0) variante = k.blitz % 4 < 2 ? sp.rot : sp.weiss;
+  let variante = 'normal';
+  if (k.blitz > 0) variante = k.blitz % 4 < 2 ? 'rot' : 'weiss';
   if (k.unverw > 0 && ['aufstehen', 'stand', 'lauf'].includes(k.zustand) && Math.floor(k.unverw / 3) % 2) alpha = 0.55;
 
   const bx = k.x - camX, by = k.y;
-  // Nachbilder
+  // Nachbilder (in der Haltung, in der sie entstanden sind)
   for (const s of k.spur) {
-    ctx.save(); ctx.globalAlpha = s.t / 55; ctx.translate(s.x - camX, s.y); ctx.scale(s.r * def.blick, 1);
-    ctx.drawImage(sp.schatten, -def.anker * bildW, -(bust ? def.beine + bildH - 18 : bildH), bildW, bildH); ctx.restore();
+    ctx.save(); ctx.globalAlpha = s.t / 55;
+    zeichneFigur(ctx, def, s.h || k.haltung, s.x - camX, s.y, bildH, s.r, 'schatten'); ctx.restore();
   }
   // Schatten am Boden
   ctx.save(); ctx.globalAlpha = 0.45 * begrenze(1 - (BODEN - k.y) / 400, 0.2, 1); ctx.fillStyle = '#000';
   ctx.beginPath(); ctx.ellipse(bx, BODEN + 4, def.breite * 0.7, 12, 0, 0, 7); ctx.fill(); ctx.restore();
 
   ctx.save();
-  ctx.globalAlpha = alpha;
   ctx.translate(bx, by + oy);
-  ctx.scale(k.richtung, 1);          // Blickrichtung
+  ctx.scale(k.richtung, 1);          // Blickrichtung (Spiegeln)
   ctx.rotate(rot);
   ctx.translate(ox, 0);
   ctx.scale(sx, sy);
-  if (bust) zeichneBeine(k, def, bildH);
-  if (def.blick < 0) ctx.scale(-1, 1); // Bild schaut von Natur aus nach links
-  const yOben = bust ? -(def.beine + bildH - 18) : -bildH;
-  ctx.drawImage(variante, -def.anker * bildW, yOben, bildW, bildH);
-  if (def.blick < 0) ctx.scale(-1, 1);
-  if (bust && k.zustand === 'angriff') zeichneArm(k, def, bildH);
+  // Haltungswechsel: alte Haltung kurz ausblenden, neue einblenden (kein Flackern)
+  const f = k.wechselT / HALTUNG_UEBERGANG;
+  if (f < 1 && k.vorherHaltung !== k.haltung) {
+    ctx.globalAlpha = alpha * (1 - f); zeichneFigur(ctx, def, k.vorherHaltung, 0, 0, bildH, 1, variante);
+  }
+  ctx.globalAlpha = alpha * (f < 1 ? Math.max(f, 0.35) : 1);
+  zeichneFigur(ctx, def, k.haltung, 0, 0, bildH, 1, variante);
   ctx.restore();
+  if (k.verlangsamt > 0) text('♪ CHILL ♪', bx, by - k.hoehe - 30 + Math.sin(t * 0.15) * 5, 26, '#3aa0ff', 'center', 5);
 
   // Block-Schild
   if (k.zustand === 'block' || k.zustand === 'blockstun') {
@@ -1135,51 +1080,6 @@ function zeichneKaempfer(k, camX, kampf) {
     const x = k.seite === 0 ? 150 : BREITE - 150;
     text(k.comboAnzeige + ' TREFFER', x, 250, 42 + Math.min(20, k.comboTimer > 60 ? (k.comboTimer - 60) * 2 : 0), ROT, 'center', 7);
   }
-}
-
-// Beine und Mantelsaum für Büsten-Charaktere (Kapuzen-Orden)
-function zeichneBeine(k, def, bildH) {
-  const L = def.beine;
-  const laufend = k.zustand === 'lauf';
-  const sw = laufend ? Math.sin(k.laufPhase) * 20 : (k.zustand === 'sprung' ? 10 : 0);
-  ctx.lineCap = 'round';
-  for (const [seite, phase] of [[-1, 1], [1, -1]]) {
-    const hx = seite * 16, fx = seite * 22 + sw * phase, knieX = (hx + fx) / 2 + 8, knieY = -L * 0.5 - (k.zustand === 'sprung' ? 16 : 0);
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 24; ctx.beginPath(); ctx.moveTo(hx, -L); ctx.lineTo(knieX, knieY); ctx.lineTo(fx, -4); ctx.stroke();
-    ctx.strokeStyle = '#111'; ctx.lineWidth = 17; ctx.beginPath(); ctx.moveTo(hx, -L); ctx.lineTo(knieX, knieY); ctx.lineTo(fx, -4); ctx.stroke();
-    ctx.fillStyle = '#111'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.ellipse(fx + 10, -5, 20, 8, 0, 0, 7); ctx.fill(); ctx.stroke();
-  }
-  // dunkler, zerrissener Mantel mit Tintentropfen
-  const oben = -L - 40, unten = -L * 0.42;
-  ctx.fillStyle = '#1c1c1c'; ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.moveTo(-44, oben); ctx.lineTo(44, oben);
-  const zacken = 8;
-  for (let i = 0; i <= zacken; i++) {
-    const x = 50 - i * (100 / zacken), tiefe = unten + ((i * 37) % 5) * 6 + Math.sin(k.anim * 0.1 + i) * 3;
-    ctx.lineTo(x + (laufend ? -sw * 0.3 : 0), tiefe);
-  }
-  ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2;
-  for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-30 + i * 20, oben + 6); ctx.lineTo(-34 + i * 22, unten - 4); ctx.stroke(); }
-  ctx.fillStyle = '#000';
-  for (let i = 0; i < 4; i++) { const x = -34 + i * 22, l = 10 + ((i * 13 + Math.floor(k.anim / 20)) % 14); ctx.fillRect(x, unten - 2, 4, l); ctx.beginPath(); ctx.arc(x + 2, unten - 2 + l, 3.5, 0, 7); ctx.fill(); }
-}
-
-// Arm mit Krallen während eines Angriffs (Büsten-Charaktere)
-function zeichneArm(k, def, bildH) {
-  const a = k.angriff, m = a.m, p = a.t - m.start;
-  const L = def.beine;
-  const reichweite = m.reichweite || 100;
-  const f = p < 0 ? 0.35 : p < m.aktiv ? 1 : 0.6;
-  const hMitte = m.hoehe ? (m.hoehe[0] + m.hoehe[1]) / 2 : 0.55;
-  const sx = 10, sy = -(L + bildH * 0.25), ex = reichweite * 0.85 * f, ey = -k.hoehe * hMitte;
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 26; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(ex * 0.4, sy + 30, ex, ey); ctx.stroke();
-  ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 19; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(ex * 0.4, sy + 30, ex, ey); ctx.stroke();
-  ctx.fillStyle = def.farbe; ctx.beginPath(); ctx.arc(ex, ey, 15, 0, 7); ctx.fill(); ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke();
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
-  for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(ex + 10, ey + i * 8); ctx.lineTo(ex + 30, ey + i * 12 - 4); ctx.stroke(); }
 }
 
 function zeichneGeschoss(p, camX, t) {
@@ -1209,11 +1109,19 @@ function zeichneGeschoss(p, camX, t) {
       ctx.shadowBlur = 0; ctx.fillStyle = '#555'; ctx.fillRect(-10, -5, 20, 10);
       break;
     case 'bluete': zeichneBluete(ctx, 0, 0, 26, p.dreh); break;
-    case 'bruellwelle': {
+    case 'schallwelle': {   // Cool Cat: Bass-Welle aus den Kopfhörern
       const r = p.w / 2;
-      ctx.translate(0, 150);
-      for (let i = 0; i < 3; i++) { ctx.strokeStyle = i === 1 ? '#e8a13a' : (i ? '#fff' : '#000'); ctx.lineWidth = 16 - i * 4; ctx.globalAlpha = Math.max(0, 1 - p.t / 45);
-        ctx.beginPath(); ctx.ellipse(0, 0, r - i * 14, 260 - i * 14, 0, Math.PI, Math.PI * 2); ctx.stroke(); }
+      ctx.translate(0, 150); ctx.globalAlpha = Math.max(0, 1 - p.t / 16);
+      for (let i = 0; i < 3; i++) { ctx.strokeStyle = ['#000', '#3aa0ff', '#fff'][i]; ctx.lineWidth = 14 - i * 4;
+        ctx.beginPath(); ctx.ellipse(0, -60, r - i * 12, 180 - i * 12, 0, 0, Math.PI * 2); ctx.stroke(); }
+      text('♪', -r * 0.6, -200, 44, '#3aa0ff', 'center', 5); text('♫', r * 0.6, -170, 40, '#fff', 'center', 5);
+      break;
+    }
+    case 'blendung': {      // Cool Cat: Lichtblitz der Sonnenbrille
+      ctx.globalAlpha = Math.max(0, 1 - p.t / 10); ctx.fillStyle = '#fff'; ctx.shadowColor = '#3aa0ff'; ctx.shadowBlur = 30;
+      ctx.beginPath();
+      for (let i = 0; i < 16; i++) { const w = i / 16 * Math.PI * 2, r = i % 2 ? 18 : 62; ctx.lineTo(Math.cos(w) * r, Math.sin(w) * r); }
+      ctx.fill();
       break;
     }
   }
@@ -1277,19 +1185,8 @@ function zeichneAura(k, camX) {
 let szene = null;
 function wechsle(neu) { szene = neu; klickZiele = []; neuGedrueckt.clear(); touchEbene.classList.remove('an'); if (neu.betreten) neu.betreten(); }
 
-// Hintergrund für Menüs: Tintenkleckse
-const menueHintergrund = (() => {
-  const c = neueLeinwand(BREITE, HOEHE), g = c.getContext('2d');
-  g.fillStyle = '#0b0b0b'; g.fillRect(0, 0, BREITE, HOEHE);
-  const r = saatZufall(7);
-  for (let i = 0; i < 18; i++) klecks(g, r() * BREITE, r() * HOEHE, 20 + r() * 90, i % 5 === 0 ? 'rgba(160,0,0,0.35)' : 'rgba(255,255,255,0.04)', i + 3);
-  g.strokeStyle = 'rgba(255,255,255,0.05)'; g.lineWidth = 1;
-  for (let i = 0; i < 60; i++) { g.beginPath(); const y = r() * HOEHE; g.moveTo(0, y); g.lineTo(BREITE, y + (r() - 0.5) * 80); g.stroke(); }
-  return c;
-})();
-
 function zeichneMenueHintergrund(titel) {
-  ctx.drawImage(menueHintergrund, 0, 0);
+  if (HINTERGRUND.menue) ctx.drawImage(HINTERGRUND.menue, 0, 0); else { ctx.fillStyle = '#0a0612'; ctx.fillRect(0, 0, BREITE, HOEHE); }
   if (titel) { klecks(ctx, BREITE / 2 - 180, 70, 40, ROT, titel.length); text(titel, BREITE / 2, 72, 60, '#fff', 'center', 8); }
 }
 
@@ -1314,14 +1211,12 @@ class TitelSzene {
     if (menueTaste('ok') || [...neuGedrueckt].length && this.t > 20 && !neuGedrueckt.has('KeyM') && !neuGedrueckt.has('F1')) { Klang.spiele('ok'); wechsle(new HauptMenue()); }
   }
   zeichne() {
-    ctx.drawImage(menueHintergrund, 0, 0);
-    // Kämpfer-Reihe
+    ctx.drawImage(HINTERGRUND.titel, 0, 0);
+    // Kämpfer-Reihe (Haltung 1, linke Hälfte schaut nach rechts, rechte nach links)
     const n = CHARAKTERE.length;
     CHARAKTERE.forEach((c, i) => {
-      const sp = SPRITES[c.id].normal, h = c.typ === 'buste' ? 260 : 300, w = sp.width * h / sp.height;
       const x = 120 + i * (1040 / (n - 1)), y = 710 + Math.sin(this.t * 0.04 + i) * 4;
-      ctx.save(); ctx.globalAlpha = 0.9; ctx.translate(x, y); if (c.blick < 0 && i < n / 2) ctx.scale(-1, 1);
-      ctx.drawImage(sp, -w / 2, -h, w, h); ctx.restore();
+      zeichneFigur(ctx, c, 1, x, y, c.bildHoehe * 0.85, i < n / 2 ? 1 : -1);
     });
     const g = ctx.createLinearGradient(0, 380, 0, 720); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.6)'); ctx.fillStyle = g; ctx.fillRect(0, 380, BREITE, 340);
     // Logo
@@ -1557,11 +1452,7 @@ class AuswahlSzene {
     } else this.warte = 0;
   }
   zeichneDetail(def, x, farbe, label, gespiegelt, fertig) {
-    const sp = SPRITES[def.id].normal, h = def.typ === 'buste' ? 330 : 380, w = sp.width * h / sp.height;
-    ctx.save(); ctx.translate(x, 700);
-    const schau = (gespiegelt ? -1 : 1) * def.blick;
-    ctx.scale(schau, 1);
-    ctx.drawImage(sp, -w * def.anker, -h, w, h); ctx.restore();
+    zeichneFigur(ctx, def, 1, x, 700, def.bildHoehe * 1.0, gespiegelt ? -1 : 1);
     const tx = gespiegelt ? BREITE - 30 : 30, al = gespiegelt ? 'right' : 'left';
     text(label, tx, 130, 26, farbe, al, 5);
     text(def.name.toUpperCase(), tx, 172, 50, '#fff', al, 8);
@@ -1585,7 +1476,7 @@ class AuswahlSzene {
     const zeige2 = this.modus !== 'arcade' && (this.modus === '2p' || this.aktiv === 1);
     this.zeichneDetail(d1, 250, '#fff', this.modus === 'demo' ? 'CPU 1' : 'SPIELER 1', false, this.c[0].fertig);
     if (zeige2) this.zeichneDetail(d2, BREITE - 250, ROT, this.modus === '2p' ? 'SPIELER 2' : (this.modus === 'demo' ? 'CPU 2' : 'CPU-GEGNER'), true, this.c[1].fertig);
-    else if (this.modus === 'arcade') { text('Besiege alle 5 Gegner!', BREITE - 40, 172, 30, ROT, 'right', 5); text('Endgegner: Kapuzen-Orden', BREITE - 40, 212, 20, '#bbb', 'right', 4); }
+    else if (this.modus === 'arcade') { text('Besiege alle 5 Gegner!', BREITE - 40, 172, 30, ROT, 'right', 5); text('Endgegner: Glut, der Fuchs', BREITE - 40, 212, 20, '#bbb', 'right', 4); }
     // Raster
     const gx = BREITE / 2 - 190, gy = 110, z = 120, abst = 10;
     CHARAKTERE.forEach((c, i) => {
@@ -1671,8 +1562,8 @@ class ArenaSzene {
 let arcade = null;
 function starteArcade(def) {
   const gegner = CHARAKTERE.filter(c => c.id !== def.id);
-  // Endgegner: Kapuzen-Orden (Leo Umbra, sonst Tigris)
-  const boss = gegner.find(c => c.id === 'leo') || gegner.find(c => c.id === 'tigris');
+  // Endgegner: Glut (spielt man selbst Glut, dann Laserbear)
+  const boss = gegner.find(c => c.id === 'glut') || gegner.find(c => c.id === 'bear');
   const rest = mischen(gegner.filter(c => c !== boss));
   arcade = { spieler: def, gegner: [...rest, boss], stufe: 0 };
   wechsle(new ArcadeZwischenSzene());
@@ -1687,13 +1578,12 @@ class ArcadeZwischenSzene {
     const g = arcade.gegner[arcade.stufe], boss = arcade.stufe === arcade.gegner.length - 1;
     text('KAMPF ' + (arcade.stufe + 1) + ' / ' + arcade.gegner.length, BREITE / 2, 150, 40, boss ? ROT : '#fff');
     const zeigen = (def, x, spiegeln) => {
-      const sp = SPRITES[def.id].normal, h = def.typ === 'buste' ? 320 : 360, w = sp.width * h / sp.height;
-      ctx.save(); ctx.translate(x, 640); ctx.scale((spiegeln ? -1 : 1) * def.blick, 1); ctx.drawImage(sp, -w * def.anker, -h, w, h); ctx.restore();
+      zeichneFigur(ctx, def, 2, x, 640, def.bildHoehe, spiegeln ? -1 : 1);
     };
     zeigen(arcade.spieler, 330, false); zeigen(g, 950, true);
     text('VS', BREITE / 2, 430, 110 + Math.sin(this.t * 0.2) * 6, ROT, 'center', 10);
     text(arcade.spieler.name, 330, 680, 36); text(g.name, 950, 680, 36, boss ? ROT : '#fff');
-    if (boss) text('ENDGEGNER – DER KAPUZEN-ORDEN', BREITE / 2, 210, 30, ROT, 'center', 5);
+    if (boss) text('ENDGEGNER – ' + g.name.toUpperCase(), BREITE / 2, 210, 30, ROT, 'center', 5);
     // Fortschritt
     arcade.gegner.forEach((d, i) => {
       const x = BREITE / 2 - (arcade.gegner.length - 1) * 35 + i * 70, y = 270;
@@ -1803,8 +1693,11 @@ class KampfSzene {
     }
     // KI denkt
     for (const k of this.k) if (k.steuer.denke) k.steuer.denke(k, this.gegnerVon(k), this);
-    // Kämpfer aktualisieren
-    a.aktualisiere(b, this); b.aktualisiere(a, this);
+    // Kämpfer aktualisieren (verlangsamte Kämpfer nur jeden zweiten Frame)
+    for (const k of this.k) {
+      if (k.verlangsamt > 0) { k.verlangsamt--; if (this.pt % 2) continue; }
+      k.aktualisiere(this.gegnerVon(k), this);
+    }
     // Treffer prüfen
     this.pruefeNahkampf(a, b); this.pruefeNahkampf(b, a);
     // Projektile
@@ -1873,7 +1766,7 @@ class KampfSzene {
       a.x -= s * ueber; b.x += s * ueber;
     }
     // Bühne und Kameraausschnitt begrenzen (maximaler Abstand = Bildschirmbreite)
-    const rand = 50;
+    const rand = 90;
     for (const k of this.k) k.x = begrenze(k.x, rand, BUEHNEN_BREITE - rand);
     const mitte = (a.x + b.x) / 2, halb = BREITE / 2 - rand;
     if (Math.abs(a.x - b.x) > halb * 2) { for (const k of this.k) k.x = begrenze(k.x, mitte - halb, mitte + halb); }
@@ -1921,7 +1814,6 @@ class KampfSzene {
     ctx.globalAlpha = 1;
     for (const z of this.zahlen) { ctx.globalAlpha = 1 - z.t / 50; text(String(z.wert), z.x - camX, z.y - z.t * 1.2, 34, z.farbe, 'center', 6); }
     ctx.globalAlpha = 1;
-    zeichneVordergrund(this.arena, camX, this.t);
     if (spielstand.einstellungen.debug) this.zeichneDebug(camX);
     ctx.restore();
     this.zeichneHUD();
@@ -1998,14 +1890,9 @@ class KampfSzene {
     ctx.fillStyle = k.def.farbe; ctx.fillRect(-100, -bandH / 2 - 12, BREITE + 200, bandH + 24);
     ctx.fillStyle = '#000'; ctx.fillRect(-100, -bandH / 2, BREITE + 200, bandH);
     ctx.beginPath(); ctx.rect(-100, -bandH / 2, BREITE + 200, bandH); ctx.clip();
-    const bild = k.def.cutin && BILDER[k.def.cutin];
+    // Angriffshaltung (Haltung 2) groß im Band
     const verschiebung = (k.seite === 0 ? 1 : -1) * (f * 120 - 60);
-    if (bild) { const h = 300, w = bild.width * h / bild.height; ctx.drawImage(bild, BREITE / 2 - w / 2 + verschiebung, -h / 2, w, h); }
-    else {
-      const sp = SPRITES[k.def.id].normal, s = k.def.portrait.s * sp.height, h = 300;
-      ctx.drawImage(sp, k.def.portrait.cx * sp.width - s / 2, k.def.portrait.cy * sp.height - s / 2, s, s, BREITE / 2 - h / 2 + verschiebung - 200, -h / 2, h, h);
-      ctx.drawImage(sp, k.def.portrait.cx * sp.width - s / 2, k.def.portrait.cy * sp.height - s / 2, s, s, BREITE / 2 - h / 2 + verschiebung + 200, -h / 2, h, h);
-    }
+    zeichneFigur(ctx, k.def, 2, BREITE / 2 + verschiebung, 230, 480 * k.def.bildHoehe / 360, k.seite === 0 ? 1 : -1);
     for (let i = 0; i < 14; i++) { ctx.fillStyle = 'rgba(255,255,255,0.35)'; const y = ((i * 53 + c.t * 40) % 300) - 150; ctx.fillRect(((i * 211 + c.t * 60 * (k.seite ? -1 : 1)) % 1500 + 1500) % 1500 - 100, y, 120, 2); }
     ctx.restore();
     text(k.attacken.superA.name, BREITE / 2 + (k.seite === 0 ? 1 : -1) * (40 - f * 80), HOEHE / 2 + 150, 76, '#fff', 'center', 12);
@@ -2051,9 +1938,9 @@ class ErgebnisSzene {
   }
   zeichne() {
     zeichneMenueHintergrund(null);
-    const def = this.sieger.def, sp = SPRITES[def.id].normal, h = def.typ === 'buste' ? 480 : 540, w = sp.width * h / sp.height;
+    const def = this.sieger.def;
     klecks(ctx, 380, 420, 230, ROT, 11);
-    ctx.save(); ctx.translate(380, 720 + Math.max(0, 40 - this.t * 2)); ctx.scale(def.blick, 1); ctx.drawImage(sp, -w * def.anker, -h, w, h); ctx.restore();
+    zeichneFigur(ctx, def, 3, 380, 700 + Math.max(0, 40 - this.t * 2), def.bildHoehe * 1.45, 1);   // Siegerpose
     let titel;
     if (this.cfg.modus === '2p') titel = (this.p1 ? 'SPIELER 1' : 'SPIELER 2') + ' GEWINNT!';
     else if (this.cfg.modus === 'demo') titel = def.name.toUpperCase() + ' GEWINNT!';
@@ -2064,7 +1951,7 @@ class ErgebnisSzene {
     ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.stroke();
     text('„' + this.spruch + '“', 910, 297, 28, '#000', 'center', 0);
     if (this.cfg.modus === '2p') text('SITZUNG:  P1 ' + sitzung.p1 + ' : ' + sitzung.p2 + ' P2', 900, 400, 30, '#fff');
-    if (this.arcadeGeschafft) text('Alle Gegner besiegt – der Kapuzen-Orden ist gefallen.', 900, 400, 24, '#ddd', 'center', 4);
+    if (this.arcadeGeschafft) text('Alle Gegner besiegt – du bist der Champion!', 900, 400, 24, '#ddd', 'center', 4);
     this.optionen().forEach(([name, fn], i) => {
       const y = 480 + i * 66, an = i === this.wahl;
       if (an) { ctx.fillStyle = ROT; ctx.fillRect(700, y - 26, 400, 52); }
@@ -2098,10 +1985,10 @@ function schleife(jetzt) {
 passeGroesseAn();
 wechsle(new LadeSzene());
 requestAnimationFrame(schleife);
-ladeBilder().then(() => { bereiteSpritesVor(); erstelleArenaVorschau(); ladeFertig = true; });
+ladeBilder().then(() => { bereiteSpritesVor(); bereiteHintergruendeVor(); erstelleArenaVorschau(); ladeFertig = true; });
 
 // Kleine Test-Schnittstelle (für automatische Tests, im Spiel ohne Wirkung)
-window.__tuk = { get szene() { return szene; }, starteKampf: cfg => wechsle(new KampfSzene(cfg)), CHAR, wechsle, HauptMenue };
+window.__tuk = { get szene() { return szene; }, starteKampf: cfg => wechsle(new KampfSzene(cfg)), CHAR, wechsle, HauptMenue, BILDER };
 </script>
 </body>
 </html>

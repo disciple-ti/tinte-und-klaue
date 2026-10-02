@@ -8,8 +8,11 @@ require('fs').mkdirSync(require('path').join(__dirname, '..', 'shots'), { recurs
   const fehler = [];
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') fehler.push(m.type() + ': ' + m.text()); });
   page.on('pageerror', e => fehler.push('pageerror: ' + e.message));
+  page.on('requestfailed', r => fehler.push('Ladefehler: ' + r.url().slice(0, 80)));
   await page.goto('file://' + path.resolve(__dirname, '..', 'index.html'));
   await page.waitForTimeout(1500);
+  const fehlend = await page.evaluate(() => Object.entries(window.__tuk.BILDER).filter(([, b]) => !b).map(([n]) => n));
+  if (fehlend.length) fehler.push('Fehlende Bilder: ' + fehlend.join(', '));
   const shot = async n => page.screenshot({ path: `${require('path').join(__dirname, '..', 'shots')}/${n}.png` });
   await shot('01_titel');
   await page.keyboard.press('Enter'); await page.waitForTimeout(300); await shot('02_menue');
@@ -38,16 +41,16 @@ require('fs').mkdirSync(require('path').join(__dirname, '..', 'shots'), { recurs
   await page.keyboard.press('Escape'); await page.waitForTimeout(200); await shot('12_pause');
   await page.keyboard.press('Escape'); await page.waitForTimeout(200);
   // Alle Paarungen und Arenen als KI-gegen-KI kurz simulieren (beschleunigt)
-  const ids = ['basso', 'riff', 'bear', 'rex', 'leo', 'tigris'], arenen = ['mondtal', 'buehne', 'tempel', 'strand'];
+  const ids = ['basso', 'coolcat', 'riff', 'rex', 'bear', 'glut'], arenen = ['neon', 'spielhalle', 'retro', 'gamingzimmer'];
   const ergebnisse = [];
   for (let i = 0; i < ids.length; i++) {
     const a = ids[i], b = ids[(i + 1) % ids.length], ar = arenen[i % 4];
     const r = await page.evaluate(({ a, b, ar }) => {
       const T = window.__tuk; T.starteKampf({ modus: 'demo', d1: T.CHAR[a], d2: T.CHAR[b], arena: ar });
-      const s = T.szene; let supers = 0, frames = 0;
+      const s = T.szene; let supers = 0, frames = 0; const haltungen = [new Set(), new Set()];
       for (const k of s.k) k.energie = 100;
-      while (frames < 60 * 60 && T.szene === s) { s.aktualisiere(); if (s.cutin && s.cutin.t === 1) supers++; frames++; if (frames % 600 === 0) for (const k of s.k) k.energie = 100; }
-      return { a, b, ar, frames, lp: s.k ? s.k.map(k => Math.round(k.lp)) : null, siege: s.k.map(k => k.siege), runde: s.runde, supers, szene: T.szene.constructor.name };
+      while (frames < 60 * 60 && T.szene === s) { s.aktualisiere(); if (s.cutin && s.cutin.t === 1) supers++; frames++; if (s.k) s.k.forEach((k, i) => haltungen[i].add(k.haltung)); if (frames % 600 === 0) for (const k of s.k) k.energie = 100; }
+      return { a, b, ar, frames, lp: s.k ? s.k.map(k => Math.round(k.lp)) : null, siege: s.k.map(k => k.siege), runde: s.runde, supers, szene: T.szene.constructor.name, haltungen: haltungen.map(h => [...h].sort().join('')) };
     }, { a, b, ar });
     ergebnisse.push(r);
     await page.waitForTimeout(100);
@@ -56,11 +59,11 @@ require('fs').mkdirSync(require('path').join(__dirname, '..', 'shots'), { recurs
   console.log(JSON.stringify(ergebnisse, null, 1));
   // Mitten im Kampf-Screenshots je Arena
   for (const ar of arenen) {
-    await page.evaluate(({ ar }) => { const T = window.__tuk; T.starteKampf({ modus: 'demo', d1: T.CHAR.leo, d2: T.CHAR.rex, arena: ar }); const s = T.szene; for (let i = 0; i < 420; i++) s.aktualisiere(); }, { ar });
+    await page.evaluate(({ ar }) => { const T = window.__tuk; T.starteKampf({ modus: 'demo', d1: T.CHAR.glut, d2: T.CHAR.coolcat, arena: ar }); const s = T.szene; for (let i = 0; i < 420; i++) s.aktualisiere(); }, { ar });
     await page.waitForTimeout(80); await shot('30_' + ar);
   }
   // Ergebnis-Szene
-  await page.evaluate(() => { const T = window.__tuk; T.starteKampf({ modus: 'cpu', d1: T.CHAR.bear, d2: T.CHAR.tigris, arena: 'mondtal' }); const s = T.szene; s.k[0].siege = 1; s.matchEnde(s.k[0]); });
+  await page.evaluate(() => { const T = window.__tuk; T.starteKampf({ modus: 'cpu', d1: T.CHAR.bear, d2: T.CHAR.glut, arena: 'neon' }); const s = T.szene; s.k[0].siege = 1; s.matchEnde(s.k[0]); });
   await page.waitForTimeout(900); await shot('40_ergebnis');
   console.log('FEHLER:', fehler.length ? fehler.join('\n') : 'keine');
   await browser.close();

@@ -8,7 +8,7 @@ require('fs').mkdirSync(require('path').join(__dirname, '..', 'shots'), { recurs
   const k = async (c, ms = 80) => { await page.keyboard.down(c); await page.waitForTimeout(ms); await page.keyboard.up(c); await page.waitForTimeout(60); console.log(c, '->', await page.evaluate(() => { const s = window.__tuk.szene; return s.constructor.name + (s.titel ? ':' + s.titel + ':' + s.wahl : '') + (s.c ? ':' + JSON.stringify(s.c) : ''); })); };
   await k('Enter'); await k('ArrowDown'); await k('ArrowDown'); await k('Enter');           // 2 Spieler
   await k('KeyD'); await k('KeyF');                                                        // P1: Riff
-  await k('ArrowLeft'); await k('ArrowDown'); await k('KeyJ');                             // P2: Tigris
+  await k('ArrowLeft'); await k('ArrowDown'); await k('KeyJ');                             // P2: Rex Aloha
   await page.waitForTimeout(900); await k('Enter');                                        // Arena
   await page.waitForTimeout(400); await k('Enter'); await page.waitForTimeout(2200);                                       // Steuerung weg, Intro
   console.log('Szene:', await page.evaluate(() => { const s = window.__tuk.szene; return s.constructor.name + ' ' + s.k.map(x => x.def.id).join(' vs ') + ' phase=' + s.phase; }));
